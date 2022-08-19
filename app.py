@@ -32,7 +32,7 @@ PROCUREMENT_API = 'cloudcommerceprocurement'
 
 
 def _generate_internal_account_id():
-    ### TODO: Replace with whatever ID generation code already exists. ###
+    # TODO: Replace with whatever ID generation code already exists.
     return str(uuid.uuid4())
 
 
@@ -43,16 +43,17 @@ class Procurement(object):
         self.service = build(PROCUREMENT_API, 'v1', cache_discovery=False)
         self.database = database
 
-    ##########################
-    ### Account operations ###
-    ##########################
+    ######################
+    # Account operations #
+    ######################
 
-    def _get_account_id(self, name):
+    @staticmethod
+    def _get_account_id(name):
         return name[len('providers/{}/accounts/'.format(PROJECT_ID)):]
 
-    def _get_account_name(self, account_id):
-        return 'providers/{}/accounts/{}'.format(PROJECT_ID,
-                                                      account_id)
+    @staticmethod
+    def _get_account_name(account_id):
+        return 'providers/{}/accounts/{}'.format(PROJECT_ID, account_id)
 
     def get_account(self, account_id):
         """Gets an account from the Procurement Service."""
@@ -80,15 +81,15 @@ class Procurement(object):
         customer = self.database.read(account_id)
         account = self.get_account(account_id)
 
-        ############################## IMPORTANT ##############################
-        ### In true integrations, Pub/Sub messages for new accounts should  ###
-        ### be ignored. Account approvals are granted as a one-off action   ###
-        ### during customer sign up. This codelab does not include the sign ###
-        ### up flow, so it chooses to approve accounts here instead.        ###
-        ### Production code for real, non-codelab services should never     ###
-        ### blindly approve these. The following should be done as a result ###
-        ### of a user signing up.                                           ###
-        #######################################################################
+        ###################################################################
+        # In true integrations, Pub/Sub messages for new accounts should  #
+        # be ignored. Account approvals are granted as a one-off action   #
+        # during customer sign up. This codelab does not include the sign #
+        # up flow, so it chooses to approve accounts here instead.        #
+        # Production code for real, non-codelab services should never     #
+        # blindly approve these. The following should be done as a result #
+        # of a user signing up.                                           #
+        ###################################################################
         if account:
             approval = None
             for account_approval in account['approvals']:
@@ -119,11 +120,12 @@ class Procurement(object):
         # Always ack account messages. We only care about the above scenarios.
         return True
 
-    ##############################
-    ### Entitlement operations ###
-    ##############################
+    ##########################
+    # Entitlement operations #
+    ##########################
 
-    def _get_entitlement_name(self, entitlement_id):
+    @staticmethod
+    def _get_entitlement_name(entitlement_id):
         return 'providers/{}/entitlements/{}'.format(PROJECT_ID,
                                                      entitlement_id)
 
@@ -166,7 +168,7 @@ class Procurement(object):
 
         customer['products'][entitlement['product']] = product
 
-        ### TODO: Set up the service for the customer to use. ###
+        # TODO: Set up the service for the customer to use.
         self.database.write(account_id, customer)
 
     def handle_entitlement_message(self, message, event_type):
@@ -232,12 +234,12 @@ class Procurement(object):
                 if entitlement['product'] in customer['products']:
                     del customer['products'][entitlement['product']]
 
-                    ### TODO: Turn off customer's service. ###
+                    # TODO: Turn off customer's service.
                     self.database.write(account_id, customer)
                 return True
 
         elif event_type == 'ENTITLEMENT_PENDING_CANCELLATION':
-            # Do nothing. We want to cancel once it's truly canceled. For now
+            # Do nothing. We want to cancel once it's truly canceled. For now,
             # it's just set to not renew at the end of the billing cycle.
             return True
 
@@ -278,7 +280,6 @@ def main(argv):
         pprint.pprint(payload)
         print()
 
-        ack = False
         if 'entitlement' in payload:
             ack = procurement.handle_entitlement_message(payload['entitlement'],
                                                          payload['eventType'])
