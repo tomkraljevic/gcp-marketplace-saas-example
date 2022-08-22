@@ -256,6 +256,9 @@ class Procurement(object):
         return False
 
 
+g_message_sequence_num = 0
+
+
 def main(argv):
     """Main entrypoint to the integration with the Procurement Service."""
 
@@ -274,9 +277,13 @@ def main(argv):
 
     def callback(message):
         """Callback for handling Cloud Pub/Sub messages."""
+        global g_message_sequence_num
+        g_message_sequence_num += 1
+        message_sequence_num = g_message_sequence_num
+
         payload = json.loads(message.data)
 
-        print('Received message:')
+        print('Received message:  Sequence number {}'.format(message_sequence_num))
         pprint.pprint(payload)
         print()
 
@@ -291,7 +298,11 @@ def main(argv):
             ack = True
 
         if ack:
+            print("TOM: Attempting to ACK sequence number {}".format(message_sequence_num))
             message.ack()
+            print("TOM: ACK sequence number {}".format(message_sequence_num))
+        else:
+            print("TOM: NO-ACK sequence number {}".format(message_sequence_num))
 
     subscription = subscriber.subscribe(subscription_path, callback=callback)
 
