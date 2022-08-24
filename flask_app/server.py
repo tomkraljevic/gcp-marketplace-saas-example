@@ -10,7 +10,7 @@ def index():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def setup():
-    token = request.headers.get('x-gcp-marketplace-token')
+    token = request.args.get('x-gcp-marketplace-token')
     print("token is:")
     print(token)
     return render_template('signup.html')
